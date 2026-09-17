@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Webstore Food Studio AI — DEMO</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif}body{margin:0;background:#101114;color:#fff}.wrap{max-width:980px;margin:auto;padding:22px}
+.hero{padding:26px 0}.hero h1{font-size:34px;margin:0 0 8px}.hero b{color:#ffb21c}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:#1a1c21;border:1px solid #30333a;border-radius:18px;padding:18px}label{display:block;margin:12px 0 6px;color:#ddd}
+input,select,textarea,button{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid #3b3e46;padding:13px;background:#111318;color:#fff}
+button{background:#ff9f0a;color:#171717;border:0;font-weight:800;cursor:pointer;margin-top:14px}.secondary{background:#2a2d34;color:#fff}
+img{width:100%;border-radius:14px;margin-top:12px;max-height:520px;object-fit:contain;background:#0d0e10}.status{margin-top:12px;color:#ffc35a}
+small{color:#aaa}.pill{display:inline-block;background:#282b31;padding:7px 10px;border-radius:999px;margin:4px 4px 0 0;font-size:12px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.hero h1{font-size:28px}}
+</style></head><body><main class="wrap">
+<section class="hero"><div class="pill">Webstore Express</div><h1>Webstore <b>Food Studio AI</b></h1>
+<p>Versão de teste sem cadastro e sem pagamento. Envie uma foto e avalie a qualidade da transformação.</p></section>
+<div class="grid">
+<section class="card">
+<h2>1. Envie a foto</h2>
+<label>Foto do produto</label><input id="photo" type="file" accept="image/*">
+<img id="preview" style="display:none">
+<label>Produto</label><input id="product" placeholder="Ex.: pastel de carne">
+<label>Tratamento</label><select id="mode">
+<option value="fix">Melhorar Foto</option><option value="preserve">Preservar Prato</option>
+<option value="delivery">Foto Delivery</option><option value="desire">Abrir o Apetite</option>
+<option value="scene">Trocar Cenário</option><option value="variation">Criar Variação</option></select>
+<label>Formato</label><select id="format"><option value="1024x1024">Quadrado 1:1</option>
+<option value="1024x1536">Vertical 2:3</option><option value="1536x1024">Horizontal 3:2</option></select>
+<label>Observações</label><textarea id="notes" rows="3" placeholder="Ex.: fundo escuro, estilo churrascaria"></textarea>
+<button id="generate">✨ Gerar foto profissional</button><div class="status" id="status"></div>
+<small>A foto é enviada ao servidor somente quando você toca em Gerar.</small>
+</section>
+<section class="card"><h2>2. Resultado</h2><p>O resultado aparecerá aqui.</p><img id="result" style="display:none">
+<a id="download" style="display:none" download="webstore-food-studio.png"><button class="secondary">Salvar imagem</button></a>
+</section></div></main>
+<script>
+const photo=document.querySelector('#photo'), preview=document.querySelector('#preview'), result=document.querySelector('#result'),
+statusEl=document.querySelector('#status'), download=document.querySelector('#download');
+photo.onchange=()=>{const f=photo.files[0];if(f){preview.src=URL.createObjectURL(f);preview.style.display='block'}};
+document.querySelector('#generate').onclick=async()=>{
+ const f=photo.files[0]; if(!f){statusEl.textContent='Escolha uma foto primeiro.';return}
+ statusEl.textContent='Gerando... isso pode levar alguns segundos.';
+ const fd=new FormData(); fd.append('image',f); fd.append('product',document.querySelector('#product').value);
+ fd.append('mode',document.querySelector('#mode').value);fd.append('size',document.querySelector('#format').value);
+ fd.append('notes',document.querySelector('#notes').value);
+ try{
+  const r=await fetch('/api/generate',{method:'POST',body:fd}); const data=await r.json();
+  if(!r.ok) throw new Error(data.error||'Falha na geração');
+  result.src='data:image/png;base64,'+data.image;result.style.display='block';
+  download.href=result.src;download.style.display='block';statusEl.textContent='Foto pronta.';
+ }catch(e){statusEl.textContent='Erro: '+e.message}
+};
+</script></body></html>
